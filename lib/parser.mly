@@ -1,6 +1,8 @@
 %{
   open Ast
 %}
+%start expression_eof
+%type <expression> expression_eof
 %token <string> IDENT
 %token COLON
 %token LPAREN
@@ -15,8 +17,7 @@
 %token AXIOM
 %start main
 %type <declaration list> main
-%start expression_eof
-%type <expression> expression_eof
+
 %%
 
 main:

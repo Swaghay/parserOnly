@@ -68,6 +68,9 @@ module Substitution = struct
 
 end
 
+let match_expression (vars: string list) (pattern: expression) (goal: expression) =
+  
+
 let rec extractvars (lst: typedVariable list) =
   match lst with
   | [] -> []
