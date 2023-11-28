@@ -143,4 +143,13 @@ let rec proofs_of_simple eqs (lst : declaration list) =
   | _ -> assert false
   
 
+let tryEqualities
+
+let performSteps
+
+let produceProof
+
+let rec produce_output_simple
+
+
   
