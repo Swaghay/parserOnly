@@ -80,6 +80,15 @@ let rec proofs_of_simple eqs (lst : declaration list) =
                                                     | None -> (("Proof of " ^ nm ^ ": ") :: ["TODO"]):: (proofs_of_simple ((nm,extractvars vars,eq)::eqs) decls)
                                                     | _ -> proofs_of_simple ((nm,extractvars vars,eq)::eqs)
                                                     decls)
-  
+let rec attemptRewrite 
+
+let tryEqualities
+
+let performSteps
+
+let produceProof
+
+let rec produce_output_simple
+
 
   
