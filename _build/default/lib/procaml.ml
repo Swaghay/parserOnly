@@ -103,7 +103,7 @@ module Substitution = struct
 
   let rec substitute (vars: string list) (sub: t) (expr: expression) = 
     match expr with
-    | Identifier x -> if List.mem x vars then (find x sub) 
+    | Identifier x -> if List.mem x vars then try (find x sub) with Not_found -> raise SubsitutionError
                       else Identifier x
     | Application (expr1, expr2) -> Application (substitute vars sub expr1, substitute vars sub expr2)
     | _ -> assert false
@@ -126,7 +126,7 @@ let rec match_expression (vars: string list) (pattern: expression) (goal: expres
     | None, None -> None)
   | _, _, _ -> None
 
-(* let attempt_rewrite (vars: string list) (eq: equality) (expr: expression) = *)
+let rec attempt_rewrite (vars: string list) (eq: equality) (expr: expression) = 
 
 let rec extractvars (lst: typedVariable list) =
   match lst with

@@ -3,7 +3,7 @@
 # Shared cache: disabled
 # Workspace root: /home/abhay/csci2041/parserOnly
 # Auto-detected concurrency: 12
-$ /usr/bin/ocamlc.opt -config > /tmp/dune_c3522d_output
+$ /usr/bin/ocamlc.opt -config > /tmp/dune_2c5568_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -138,3 +138,9 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune_c3522d_output
 #      }
 #  ; instrument_with = []
 #  }
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl lib/procaml.ml) > _build/default/lib/.procaml.objs/procaml.impl.d
+> File "lib/procaml.ml", line 136, characters 0-3:
+> 136 | let rec proofs_of_simple eqs (lst : declaration list) =
+>       ^^^
+> Error: Syntax error
+[2]
