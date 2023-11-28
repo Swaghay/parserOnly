@@ -104,7 +104,7 @@ module Substitution = struct
 
   let rec substitute (vars: string list) (sub: t) (expr: expression) = 
     match expr with
-    | Identifier x -> if List.mem x vars then try (find x sub) with Not_found -> raise SubstitutionError
+    | Identifier x -> if (List.mem x vars) then try (find x sub) with Not_found -> raise SubstitutionError
                       else Identifier x
     | Application (expr1, expr2) -> Application (substitute vars sub expr1, substitute vars sub expr2)
     | _ -> assert false
@@ -117,7 +117,7 @@ end
 let rec match_expression (vars: string list) (pattern: expression) (goal: expression) =
   match pattern, goal with
   | Identifier x, Identifier g -> if x = g then Some Substitution.empty else Some (Substitution.singleton x (Identifier g)) 
-  | Identifier x, g -> if List.mem x vars then Some (Substitution.singleton x g) else Some Substitution.empty
+  | Identifier x, g -> if List.mem x vars Some (Substitution.singleton x g) else Some Substitution.empty
   | Application (patExpr1, patExpr2), Application (goalExpr1, goalExpr2) -> 
     let sub1 = (match_expression vars patExpr1 goalExpr1) in
     let sub2 = (match_expression vars patExpr2 goalExpr2) in
