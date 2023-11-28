@@ -102,13 +102,19 @@ module Substitution = struct
 
   let find = Smap.find
 
+ (*substitute ["a","b","c"], bar x y, foo (bar a b) c*)
   let rec substitute (vars: string list) (sub: t) (expr: expression) = 
+
     match expr with
     | Identifier x -> if List.mem x vars then try (find x sub) with Not_found -> raise SubstitutionError
                       else Identifier x
     | Application (expr1, expr2) -> Application (substitute vars sub expr1, substitute vars sub expr2)
     | _ -> assert false
-
+  (*
+  Application(foo(bar a b), c)
+  foo(bar a b)
+  
+  *)
   let print_subst (s : t) =
     Smap.iter (fun k v -> print_endline (k ^ " -> " ^ string_of_expression v)) s
 
@@ -116,8 +122,8 @@ end
 
 let rec match_expression (vars: string list) (pattern: expression) (goal: expression) =
   match pattern, goal with
-  | Identifier x, Identifier g -> if x = g then Some Substitution.empty else Some (Substitution.singleton x (Identifier g)) 
-  | Identifier x, g -> if List.mem x vars then Some (Substitution.singleton x g) else Some Substitution.empty
+  | Identifier x, _ when (List.mem x vars) -> Some (Substitution.singleton x goal)
+  | Identifier x, Identifier g when x = g -> Some Substitution.empty 
   | Application (patExpr1, patExpr2), Application (goalExpr1, goalExpr2) -> 
     let sub1 = (match_expression vars patExpr1 goalExpr1) in
     let sub2 = (match_expression vars patExpr2 goalExpr2) in
@@ -128,10 +134,11 @@ let rec match_expression (vars: string list) (pattern: expression) (goal: expres
     | _, _ -> None)
   | _, _ -> None
 
+(*attempt_rewrite ["a","b","c"] Equality(parse "bar x y", parse "y") (parse "foo (bar a b) c")*)
 let rec attempt_rewrite (vars: string list) (Equality(lhs, rhs)) (expr: expression) =
   let () = print_string ("EXPR: " ^ string_of_expression expr ^ "\n") in
   match (match_expression vars lhs expr) with
-  | Some s -> Some (Substitution.substitute vars s rhs)
+  | Some s -> let () = print_string (string_of_expression lhs ^ "\n") in Some (Substitution.substitute vars s rhs) (*["a","b","c"], bar x y, foo (bar a b) c*)
   | None -> (match expr with
             | Application (e1, e2) -> (match (attempt_rewrite vars (Equality(lhs,rhs)) e1) with
                                       | None ->(match (attempt_rewrite vars (Equality(lhs,rhs)) e2) with
@@ -168,6 +175,29 @@ let rec proofs_of_simple eqs (lst : declaration list) =
   | _ -> assert false
   
 
+  (*
+tryEqualities a (parse_expression "foo (bar a b) c");;
+LHS: foo x x
+RHS: bar x
+EXPR: foo (bar a b) c
+EXPR: foo (bar a b)
+EXPR: foo
+EXPR: bar a b
+EXPR: bar a
+EXPR: bar
+EXPR: a
+LHSNone: foo x x
+EXPR: b
+LHSNone: foo x x
+LHSNone: foo x x
+EXPR: c
+LHSNone: foo x x
+LHS: bar x y
+RHS: y
+EXPR: foo (bar a b) c
+- : (string * expression) option = Some ("eq2", Identifier "c")   
+*)
+
 (*
 tryEqualities a
 (parse_expression "bozo (bar a) (foo (bar a))");;
@@ -177,3 +207,11 @@ Some
   Application
    (Identifier "foo", Application (Identifier "bar", Identifier "a")))
    *)
+
+
+(* 
+   attempt_rewrite ["a";"b";"c"] (Equality(parse_expression "bar x y", parse_expression "y")) (parse_expression "foo (bar a b) c");;   
+EXPR: foo (bar a b) c
+- : expression option = Some (Identifier "y")
+
+*)

@@ -122,8 +122,8 @@ end
 
 let rec match_expression (vars: string list) (pattern: expression) (goal: expression) =
   match pattern, goal with
+  | Identifier x, _ when (List.mem x vars) -> Some (Substitution.singleton x goal)
   | Identifier x, Identifier g when x = g -> Some Substitution.empty 
-  | Identifier x, _ when (List.mem x vars) -> Some (Substitution.singleton x g)
   | Application (patExpr1, patExpr2), Application (goalExpr1, goalExpr2) -> 
     let sub1 = (match_expression vars patExpr1 goalExpr1) in
     let sub2 = (match_expression vars patExpr2 goalExpr2) in
@@ -133,11 +133,12 @@ let rec match_expression (vars: string list) (pattern: expression) (goal: expres
        | exception Substitution.MergeError -> None)
     | _, _ -> None)
   | _, _ -> None
+
 (*attempt_rewrite ["a","b","c"] Equality(parse "bar x y", parse "y") (parse "foo (bar a b) c")*)
 let rec attempt_rewrite (vars: string list) (Equality(lhs, rhs)) (expr: expression) =
   let () = print_string ("EXPR: " ^ string_of_expression expr ^ "\n") in
   match (match_expression vars lhs expr) with
-  | Some s -> let () = print_string (string_of_expression lhs ^ "\n") in Some (Substitution.substitute vars s expr) (*["a","b","c"], bar x y, foo (bar a b) c*)
+  | Some s -> let () = print_string (string_of_expression lhs ^ "\n") in Some (Substitution.substitute vars s rhs) (*["a","b","c"], bar x y, foo (bar a b) c*)
   | None -> (match expr with
             | Application (e1, e2) -> (match (attempt_rewrite vars (Equality(lhs,rhs)) e1) with
                                       | None ->(match (attempt_rewrite vars (Equality(lhs,rhs)) e2) with
