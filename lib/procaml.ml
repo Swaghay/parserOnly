@@ -177,3 +177,26 @@ Some
   Application
    (Identifier "foo", Application (Identifier "bar", Identifier "a")))
    *)
+
+(*
+tryEqualities a (parse_expression "foo (bar a b) c");;
+LHS: foo x x
+RHS: bar x
+EXPR: foo (bar a b) c
+EXPR: foo (bar a b)
+EXPR: foo
+EXPR: bar a b
+EXPR: bar a
+EXPR: bar
+EXPR: a
+LHSNone: foo x x
+EXPR: b
+LHSNone: foo x x
+LHSNone: foo x x
+EXPR: c
+LHSNone: foo x x
+LHS: bar x y
+RHS: y
+EXPR: foo (bar a b) c
+- : (string * expression) option = Some ("eq2", Identifier "c")   
+*)
