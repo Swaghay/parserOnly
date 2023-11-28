@@ -81,6 +81,7 @@ let string_of_declaration (d : declaration) : string =
 module Substitution = struct 
 
   exception MergeError
+  exception SubstitutionError
 
   module Smap = Map.Make(String)
 
@@ -96,14 +97,14 @@ module Substitution = struct
     | None, None -> None
     | Some mm1, None -> Some mm1
     | None, Some mm2 -> Some mm2
-    | Some mm1, Some mm2 -> if mm1 = mm2 then Some mm1 else None
+    | Some mm1, Some mm2 -> if mm1 = mm2 then Some mm1 else raise MergeError
     in Smap.merge helper map1 map2
 
   let find = Smap.find
 
   let rec substitute (vars: string list) (sub: t) (expr: expression) = 
     match expr with
-    | Identifier x -> if List.mem x vars then try (find x sub) with Not_found -> raise SubsitutionError
+    | Identifier x -> if List.mem x vars then try (find x sub) with Not_found -> raise SubstitutionError
                       else Identifier x
     | Application (expr1, expr2) -> Application (substitute vars sub expr1, substitute vars sub expr2)
     | _ -> assert false
@@ -114,24 +115,48 @@ module Substitution = struct
 end
 
 let rec match_expression (vars: string list) (pattern: expression) (goal: expression) =
-  match vars, pattern, goal with
-  | v, Identifier x, g -> if List.mem x v then Some (Substitution.singleton x g) else Some Substitution.empty
-  | v, Application (patExpr1, patExpr2), Application (goalExpr1, goalExpr2) -> 
-    let sub1 = (match_expression v patExpr1 goalExpr1) in
-    let sub2 = (match_expression v patExpr2 goalExpr2) in
+  match pattern, goal with
+  | Identifier x, Identifier g -> if x = g then Some Substitution.empty else Some (Substitution.singleton x (Identifier g)) 
+  | Identifier x, g -> if List.mem x vars then Some (Substitution.singleton x g) else Some Substitution.empty
+  | Application (patExpr1, patExpr2), Application (goalExpr1, goalExpr2) -> 
+    let sub1 = (match_expression vars patExpr1 goalExpr1) in
+    let sub2 = (match_expression vars patExpr2 goalExpr2) in
     (match sub1, sub2 with
-    | Some x, Some y -> Some (Substitution.merge x y)
-    | Some x, None -> Some x
-    | None, Some y -> Some y
-    | None, None -> None)
-  | _, _, _ -> None
+    | Some x, Some y -> (match (Substitution.merge x y) with
+       | a -> Some a
+       | exception Substitution.MergeError -> None)
+    | _, _ -> None)
+  | _, _ -> None
 
-(*let rec attempt_rewrite (vars: string list) (eq: equality) (expr: expression) =*) 
+let rec attempt_rewrite (vars: string list) (Equality(lhs, rhs)) (expr: expression) =
+  let () = print_string ("EXPR: " ^ string_of_expression expr ^ "\n") in
+  match (match_expression vars lhs expr) with
+  | Some s -> Some (Substitution.substitute vars s rhs)
+  | None -> (match expr with
+            | Application (e1, e2) -> (match (attempt_rewrite vars (Equality(lhs,rhs)) e1) with
+                                      | None ->(match (attempt_rewrite vars (Equality(lhs,rhs)) e2) with
+                                                | None -> let () = print_string ("LHSNone: " ^ string_of_expression lhs ^ "\n") in None 
+                                                | Some e2' ->  let () = print_string ("LHSSome: " ^ string_of_expression lhs ^ "\n") in Some (Application (e1, e2')))
+                                      | Some e1' -> Some (Application (e1', e2)))  
+            | _ -> None)
+       
+let rec tryEqualities (eqs) (expr: expression) = 
+  match eqs with
+  | [] -> None
+  | (name,var,lhs,rhs)::tl -> let () = print_string ("LHS: " ^ string_of_expression lhs ^ "\n" ^ "RHS: " ^ string_of_expression rhs ^ "\n") in match (attempt_rewrite var (Equality(lhs, rhs)) expr) with
+                              | None -> (tryEqualities tl expr)
+                              | Some(e) -> Some(name, e)
 
-let rec extractvars (lst: typedVariable list) =
+  let rec extractvars (lst: typedVariable list) =
+    match lst with
+    | [] -> []
+    | TypedVariable (s1, _)::t -> s1::extractvars t
+
+let rec extractAxioms (lst: declaration list) =
   match lst with
   | [] -> []
-  | TypedVariable (s1, _)::t -> s1::extractvars t
+  | ProofDeclaration(name, typedVarLst, Equality(lhs, rhs), Some Axiom)::t -> (name, (extractvars typedVarLst), lhs, rhs)::extractAxioms t
+  | _::t -> extractAxioms t
 
 let rec proofs_of_simple eqs (lst : declaration list) =
   match lst with
@@ -143,4 +168,12 @@ let rec proofs_of_simple eqs (lst : declaration list) =
   | _ -> assert false
   
 
-  
+(*
+tryEqualities a
+(parse_expression "bozo (bar a) (foo (bar a))");;
+- : (string * expression) option =
+Some
+ ("eq2",
+  Application
+   (Identifier "foo", Application (Identifier "bar", Identifier "a")))
+   *)
