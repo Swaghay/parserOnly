@@ -53,20 +53,36 @@ module Substitution = struct
     | None, None -> None
     | Some mm1, None -> Some mm1
     | None, Some mm2 -> Some mm2
-    | Some mm1, Some mm2 -> if mm1 = mm2 then Some mm1 else raise MergeError
+    | Some mm1, Some mm2 -> if mm1 = mm2 then Some mm1 else None
     in Smap.merge helper map1 map2
 
   let find = Smap.find
 
-  let rec substitute (vars: string list) (substitution: t) (e: expression) = 
-    match e with
-    | Identifier s -> if (List.mem s vars) then (find s substitution) else Identifier s
-    | Application (e1, e2) -> Application (substitute vars substitution e1, substitute vars substitution e2)
+  let rec substitute (vars: string list) (sub: t) (expr: expression) = 
+    match expr with
+    | Identifier x -> if List.mem x vars then (find x sub) 
+                      else Identifier x
+    | Application (expr1, expr2) -> Application (substitute vars sub expr1, substitute vars sub expr2)
 
   let print_subst (s : t) =
     Smap.iter (fun k v -> print_endline (k ^ " -> " ^ string_of_expression v)) s
 
 end
+
+let rec match_expression (vars: string list) (pattern: expression) (goal: expression) =
+  match vars, pattern, goal with
+  | v, Identifier x, g -> if List.mem x v then Some (Substitution.singleton x g) else Some Substitution.empty
+  | v, Application (patExpr1, patExpr2), Application (goalExpr1, goalExpr2) -> 
+    let sub1 = (match_expression v patExpr1 goalExpr1) in
+    let sub2 = (match_expression v patExpr2 goalExpr2) in
+    (match sub1, sub2 with
+    | Some x, Some y -> Some (Substitution.merge x y)
+    | Some x, None -> Some x
+    | None, Some y -> Some y
+    | None, None -> None)
+  | _, _, _ -> None
+
+(* let attempt_rewrite (vars: string list) (eq: equality) (expr: expression) = *)
 
 let rec extractvars (lst: typedVariable list) =
   match lst with

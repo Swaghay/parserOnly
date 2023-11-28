@@ -13,7 +13,7 @@ module MenhirBasics = struct
     | LPAREN
     | LET
     | IDENT of (
-# 4 "lib/parser.mly"
+# 6 "lib/parser.mly"
        (string)
 # 19 "lib/parser.ml"
   )
@@ -117,7 +117,7 @@ and ('s, 'r) _menhir_cell1_list_argument_ =
 
 and 's _menhir_cell0_IDENT = 
   | MenhirCell0_IDENT of 's * (
-# 4 "lib/parser.mly"
+# 6 "lib/parser.mly"
        (string)
 # 123 "lib/parser.ml"
 )
@@ -137,7 +137,7 @@ and _menhir_box_expression_eof =
 let _menhir_action_02 =
   fun nm t ->
     (
-# 28 "lib/parser.mly"
+# 29 "lib/parser.mly"
                                ( TypedVariable (nm, t) )
 # 143 "lib/parser.ml"
      : (Ast.typedVariable))
@@ -145,7 +145,7 @@ let _menhir_action_02 =
 let _menhir_action_03 =
   fun arg ->
     (
-# 29 "lib/parser.mly"
+# 30 "lib/parser.mly"
                                   ( arg )
 # 151 "lib/parser.ml"
      : (Ast.typedVariable))
@@ -153,7 +153,7 @@ let _menhir_action_03 =
 let _menhir_action_04 =
   fun args eq hint lemma_name ->
     (
-# 26 "lib/parser.mly"
+# 27 "lib/parser.mly"
    ( ProofDeclaration (lemma_name, args, eq, hint) )
 # 159 "lib/parser.ml"
      : (Ast.declaration))
@@ -161,7 +161,7 @@ let _menhir_action_04 =
 let _menhir_action_05 =
   fun e ->
     (
-# 31 "lib/parser.mly"
+# 32 "lib/parser.mly"
                                  ( e )
 # 167 "lib/parser.ml"
      : (Ast.equality))
@@ -169,7 +169,7 @@ let _menhir_action_05 =
 let _menhir_action_06 =
   fun lhs rhs ->
     (
-# 32 "lib/parser.mly"
+# 33 "lib/parser.mly"
                                               ( Equality (lhs, rhs) )
 # 175 "lib/parser.ml"
      : (Ast.equality))
@@ -177,7 +177,7 @@ let _menhir_action_06 =
 let _menhir_action_07 =
   fun e ->
     (
-# 36 "lib/parser.mly"
+# 37 "lib/parser.mly"
                                                ( e )
 # 183 "lib/parser.ml"
      : (Ast.expression))
@@ -185,7 +185,7 @@ let _menhir_action_07 =
 let _menhir_action_08 =
   fun arg lhs ->
     (
-# 37 "lib/parser.mly"
+# 38 "lib/parser.mly"
                                  ( Application (lhs, Identifier arg) )
 # 191 "lib/parser.ml"
      : (Ast.expression))
@@ -193,7 +193,7 @@ let _menhir_action_08 =
 let _menhir_action_09 =
   fun arg lhs ->
     (
-# 39 "lib/parser.mly"
+# 40 "lib/parser.mly"
    ( Application (lhs, arg) )
 # 199 "lib/parser.ml"
      : (Ast.expression))
@@ -201,7 +201,7 @@ let _menhir_action_09 =
 let _menhir_action_10 =
   fun nm ->
     (
-# 40 "lib/parser.mly"
+# 41 "lib/parser.mly"
              ( Identifier nm )
 # 207 "lib/parser.ml"
      : (Ast.expression))
@@ -209,7 +209,7 @@ let _menhir_action_10 =
 let _menhir_action_11 =
   fun e ->
     (
-# 43 "lib/parser.mly"
+# 44 "lib/parser.mly"
                        (e)
 # 215 "lib/parser.ml"
      : (Ast.expression))
@@ -217,7 +217,7 @@ let _menhir_action_11 =
 let _menhir_action_12 =
   fun e ->
     (
-# 51 "lib/parser.mly"
+# 52 "lib/parser.mly"
                  ( e )
 # 223 "lib/parser.ml"
      : (Ast.expression))
@@ -225,7 +225,7 @@ let _menhir_action_12 =
 let _menhir_action_13 =
   fun e1 e2 ->
     (
-# 53 "lib/parser.mly"
+# 54 "lib/parser.mly"
   ( Application (Application (Identifier ",", e1), e2))
 # 231 "lib/parser.ml"
      : (Ast.expression))
@@ -233,7 +233,7 @@ let _menhir_action_13 =
 let _menhir_action_14 =
   fun () ->
     (
-# 34 "lib/parser.mly"
+# 35 "lib/parser.mly"
                             ( Axiom )
 # 239 "lib/parser.ml"
      : (Ast.hint))
@@ -273,7 +273,7 @@ let _menhir_action_18 =
 let _menhir_action_19 =
   fun _1 ->
     (
-# 23 "lib/parser.mly"
+# 24 "lib/parser.mly"
                         ( _1 )
 # 279 "lib/parser.ml"
      : (Ast.declaration list))
