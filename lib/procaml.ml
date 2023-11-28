@@ -126,7 +126,7 @@ let rec match_expression (vars: string list) (pattern: expression) (goal: expres
     | None, None -> None)
   | _, _, _ -> None
 
-(* let attempt_rewrite (vars: string list) (eq: equality) (expr: expression) = *)
+let attempt_rewrite (vars: string list) (eq: equality) (expr: expression) = 
 
 let rec extractvars (lst: typedVariable list) =
   match lst with
