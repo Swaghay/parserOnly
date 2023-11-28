@@ -2,10 +2,17 @@
 (* The type of tokens. *)
 
 type token = 
+  | WITH
+  | TYPE
+  | STAR
   | RPAREN
+  | REC
   | PROVE
+  | OF
+  | MATCH
   | LPAREN
   | LET
+  | INDUCTION
   | IDENT of (string)
   | HINT
   | EQUAL
@@ -13,7 +20,9 @@ type token =
   | ENDCOMMENT
   | COMMA
   | COLON
+  | BAR
   | AXIOM
+  | ARROW
 
 (* This exception is raised by the monolithic API functions. *)
 
