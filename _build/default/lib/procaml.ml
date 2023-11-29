@@ -136,34 +136,63 @@ let rec match_expression (vars: string list) (pattern: expression) (goal: expres
 
 (*attempt_rewrite ["a","b","c"] Equality(parse "bar x y", parse "y") (parse "foo (bar a b) c")*)
 let rec attempt_rewrite (vars: string list) (Equality(lhs, rhs)) (expr: expression) =
-  let () = print_string ("EXPR: " ^ string_of_expression expr ^ "\n") in
   match (match_expression vars lhs expr) with
-  | Some s -> let () = print_string (string_of_expression lhs ^ "\n") in Some (Substitution.substitute vars s rhs) (*["a","b","c"], bar x y, foo (bar a b) c*)
+  | Some s -> Some (Substitution.substitute vars s rhs) (*["a","b","c"], bar x y, foo (bar a b) c*)
   | None -> (match expr with
             | Application (e1, e2) -> (match (attempt_rewrite vars (Equality(lhs,rhs)) e1) with
                                       | None ->(match (attempt_rewrite vars (Equality(lhs,rhs)) e2) with
-                                                | None -> let () = print_string ("LHSNone: " ^ string_of_expression lhs ^ "\n") in None 
-                                                | Some e2' ->  let () = print_string ("LHSSome: " ^ string_of_expression lhs ^ "\n") in Some (Application (e1, e2')))
+                                                | None -> None 
+                                                | Some e2' -> Some (Application (e1, e2')))
                                       | Some e1' -> Some (Application (e1', e2)))  
             | _ -> None)
        
 let rec tryEqualities (eqs) (expr: expression) = 
   match eqs with
   | [] -> None
-  | (name,var,lhs,rhs)::tl -> let () = print_string ("LHS: " ^ string_of_expression lhs ^ "\n" ^ "RHS: " ^ string_of_expression rhs ^ "\n") in match (attempt_rewrite var (Equality(lhs, rhs)) expr) with
+  | (name,var,lhs,rhs)::tl -> match (attempt_rewrite var (Equality(lhs, rhs)) expr) with
                               | None -> (tryEqualities tl expr)
                               | Some(e) -> Some(name, e)
 
-  let rec extractvars (lst: typedVariable list) =
-    match lst with
-    | [] -> []
-    | TypedVariable (s1, _)::t -> s1::extractvars t
+let rec performSteps (eqs) (expr: expression) =
+  match tryEqualities (eqs) (expr) with
+  | None -> []
+  | Some (n,e) -> (n,e) :: performSteps eqs e  
+  
+let rec proveHelper lhs steps rhs =
+  (string_of_expression lhs) ::
+  match steps with 
+  | (n,e)::t -> (" = { " ^ n ^ " }") :: proveHelper e t rhs
+  | [] -> if lhs = rhs then [] else (" = { ??? }") :: (string_of_expression rhs) :: []
+
+let prove eqs lhs rhs =
+  let steps = (performSteps eqs lhs) in 
+  proveHelper lhs steps rhs
+
+let rec extractvars (lst: typedVariable list) =
+  match lst with
+  | [] -> []
+  | TypedVariable (s1, _)::t -> s1::extractvars t
 
 let rec extractAxioms (lst: declaration list) =
   match lst with
   | [] -> []
   | ProofDeclaration(name, typedVarLst, Equality(lhs, rhs), Some Axiom)::t -> (name, (extractvars typedVarLst), lhs, rhs)::extractAxioms t
   | _::t -> extractAxioms t
+
+let rec prover eqs declarations =
+   match declarations with
+      | ProofDeclaration (nm, vars, Equality (lhs,rhs), None) :: rest
+         -> prove eqs lhs rhs :: prover ((nm, (extractvars vars),lhs,rhs)::eqs) rest
+      | ProofDeclaration (_, _, _, _) :: rest
+         -> prover eqs rest
+      | _ :: rest -> prover eqs rest
+      | [] -> []
+
+let prover_main decls =
+   prover (extractAxioms decls) decls |>
+   List.map (String.concat "\n") |>
+   String.concat "\n\n" |>
+   print_endline
 
 let rec proofs_of_simple eqs (lst : declaration list) =
   match lst with
@@ -174,44 +203,3 @@ let rec proofs_of_simple eqs (lst : declaration list) =
                                                     decls)
   | _ -> assert false
   
-
-  (*
-tryEqualities a (parse_expression "foo (bar a b) c");;
-LHS: foo x x
-RHS: bar x
-EXPR: foo (bar a b) c
-EXPR: foo (bar a b)
-EXPR: foo
-EXPR: bar a b
-EXPR: bar a
-EXPR: bar
-EXPR: a
-LHSNone: foo x x
-EXPR: b
-LHSNone: foo x x
-LHSNone: foo x x
-EXPR: c
-LHSNone: foo x x
-LHS: bar x y
-RHS: y
-EXPR: foo (bar a b) c
-- : (string * expression) option = Some ("eq2", Identifier "c")   
-*)
-
-(*
-tryEqualities a
-(parse_expression "bozo (bar a) (foo (bar a))");;
-- : (string * expression) option =
-Some
- ("eq2",
-  Application
-   (Identifier "foo", Application (Identifier "bar", Identifier "a")))
-   *)
-
-
-(* 
-   attempt_rewrite ["a";"b";"c"] (Equality(parse_expression "bar x y", parse_expression "y")) (parse_expression "foo (bar a b) c");;   
-EXPR: foo (bar a b) c
-- : expression option = Some (Identifier "y")
-
-*)
