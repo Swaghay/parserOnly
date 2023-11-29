@@ -158,15 +158,15 @@ let rec performSteps (eqs) (expr: expression) =
   | None -> []
   | Some (n,e) -> (n,e) :: performSteps eqs e  
   
-let rec proveHelper lhs steps rhs =
+let rec proveHelper lhs steps rhs : string list =
   (string_of_expression lhs) ::
   match steps with 
   | (n,e)::t -> (" = { " ^ n ^ " }") :: proveHelper e t rhs
   | [] -> if lhs = rhs then [] else (" = { ??? }") :: (string_of_expression rhs) :: []
 
-let prove eqs lhs rhs =
+let prove nm eqs lhs rhs =
   let steps = (performSteps eqs lhs) in 
-  proveHelper lhs steps rhs
+  ("Proof of " ^ nm ^ ":")::proveHelper lhs steps rhs
 
 let rec extractvars (lst: typedVariable list) =
   match lst with
@@ -182,7 +182,7 @@ let rec extractAxioms (lst: declaration list) =
 let rec prover eqs declarations =
    match declarations with
       | ProofDeclaration (nm, vars, Equality (lhs,rhs), None) :: rest
-         -> prove eqs lhs rhs :: prover ((nm, (extractvars vars),lhs,rhs)::eqs) rest
+         -> prove nm eqs lhs rhs :: prover ((nm, (extractvars vars),lhs,rhs)::eqs) rest
       | ProofDeclaration (_, _, _, _) :: rest
          -> prover eqs rest
       | _ :: rest -> prover eqs rest
