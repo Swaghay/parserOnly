@@ -165,9 +165,8 @@ let rec proveHelper lhs steps rhs : string list =
   | [] -> if lhs = rhs then [] else (" = { ??? }") :: (string_of_expression rhs) :: []
 
 let prove nm eqs lhs rhs =
-  let stepslhs = (performSteps eqs lhs) in 
-  let stepsrhs = (performSteps eqs rhs) in
-  ("Proof of " ^ nm ^ ":")::(proveHelper lhs stepslhs rhs)@(proveHelper rhs stepsrhs lhs)
+  let stepslhs = (performSteps eqs lhs) in
+  ("Proof of " ^ nm ^ ":")::(proveHelper lhs stepslhs rhs)
 
 let rec extractvars (lst: typedVariable list) =
   match lst with
