@@ -193,13 +193,3 @@ let prover_main decls =
    List.map (String.concat "\n") |>
    String.concat "\n\n" |>
    print_endline
-
-let rec proofs_of_simple eqs (lst : declaration list) =
-  match lst with
-  | [] -> []
-  | (ProofDeclaration (nm,vars,eq,hint))::decls  -> (match hint with
-                                                    | None -> (("Proof of " ^ nm ^ ": ") :: ["TODO"]):: (proofs_of_simple ((nm,extractvars vars,eq)::eqs) decls)
-                                                    | _ -> proofs_of_simple ((nm,extractvars vars,eq)::eqs)
-                                                    decls)
-  | _ -> assert false
-  
